@@ -19,17 +19,6 @@ const PERMS1 = [151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7
 
 const PERMS = [PERMS1; PERMS1]
 
-# Might refactor this down to a simple lerp
-function interpolate(a0::T, a1::T, w::T, method::Symbol=:linear) where {T<:AbstractFloat}
-    0 ≤ w ≤ 1 || throw(ArgumentError("Expected 0 ≤ w ≤ 1, got $w"))
-    if method ∉ [:linear, :smoothstep, :smootherstep]
-        throw(ArgumentError("Unrecognized interpolation method $method"))
-    end
-    x = method == :linear ? w : eval(method)(a0, a1, w)
-    return a0 + x * (a1 - a0)
-end
-
-
 function gradient(hash::Int, x::T, y::T, z::T) where {T<:AbstractFloat}
     h = hash & 15
     u = h < 8 ? x : y

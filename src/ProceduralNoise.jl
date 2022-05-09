@@ -1,6 +1,6 @@
 module ProceduralNoise
 
-include("smoothstep.jl")
+include("interpolation.jl")
 include("perlin.jl")
 
 export smoothstep, smootherstep
