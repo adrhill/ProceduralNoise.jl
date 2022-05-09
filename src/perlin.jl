@@ -22,10 +22,15 @@ const PERMS = [PERMS1; PERMS1]
 function gradient(hash::Int, x::T, y::T, z::T) where {T<:AbstractFloat}
     h = hash & 15
     u = h < 8 ? x : y
-    v = h < 4 ? y : h == 12 || h == 14 ? x : z
+    v = if h < 4
+        y
+    elseif h == 12 || h == 14
+        x
+    else
+        z
+    end
     return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v)
 end
-
 
 function perlin(x::T, y::T, z::T) where {T<:AbstractFloat}
     xi = trunc(Int, x) & 255 + 1
@@ -60,13 +65,14 @@ function perlin(x::T, y::T, z::T) where {T<:AbstractFloat}
     return (interpolate(y1, y2, w) + 1) / 2
 end
 
-
-function octaveperlin(x::T, y::T, z::T, octaves::Int, persistence::T) where {T<:AbstractFloat}
+function octaveperlin(
+    x::T, y::T, z::T, octaves::Int, persistence::T
+) where {T<:AbstractFloat}
     total = 0.0
     frequency = 1.0
     amplitude = 1.0
     maxval = 0.0
-    for i = 1:octaves
+    for _ in 1:octaves
         total += perlin(x * frequency, y * frequency, z * frequency) * amplitude
         maxval += amplitude
         amplitude *= persistence
