@@ -1,0 +1,13 @@
+name = "ProceduralNoise"
+uuid = "49f857b6-67b3-4211-babc-c8b05fe28a5f"
+authors = ["Adrian Hill <adrian.hill@mailbox.org>, Alex Arslan"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
