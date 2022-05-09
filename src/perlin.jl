@@ -20,7 +20,7 @@ const PERMS1 = [151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7
 const PERMS = [PERMS1; PERMS1]
 
 # Might refactor this down to a simple lerp
-function interpolate{T<:AbstractFloat}(a0::T, a1::T, w::T, method::Symbol=:linear)
+function interpolate(a0::T, a1::T, w::T, method::Symbol=:linear) where {T<:AbstractFloat}
     0 ≤ w ≤ 1 || throw(ArgumentError("Expected 0 ≤ w ≤ 1, got $w"))
     if method ∉ [:linear, :smoothstep, :smootherstep]
         throw(ArgumentError("Unrecognized interpolation method $method"))
@@ -30,7 +30,7 @@ function interpolate{T<:AbstractFloat}(a0::T, a1::T, w::T, method::Symbol=:linea
 end
 
 
-function gradient{T<:AbstractFloat}(hash::Int, x::T, y::T, z::T)
+function gradient(hash::Int, x::T, y::T, z::T) where {T<:AbstractFloat}
     h = hash & 15
     u = h < 8 ? x : y
     v = h < 4 ? y : h == 12 || h == 14 ? x : z
@@ -38,7 +38,7 @@ function gradient{T<:AbstractFloat}(hash::Int, x::T, y::T, z::T)
 end
 
 
-function perlin{T<:AbstractFloat}(x::T, y::T, z::T)
+function perlin(x::T, y::T, z::T) where {T<:AbstractFloat}
     xi = trunc(Int, x) & 255 + 1
     yi = trunc(Int, y) & 255 + 1
     zi = trunc(Int, z) & 255 + 1
@@ -72,7 +72,7 @@ function perlin{T<:AbstractFloat}(x::T, y::T, z::T)
 end
 
 
-function octaveperlin{T<:AbstractFloat}(x::T, y::T, z::T, octaves::Int, persistence::T)
+function octaveperlin(x::T, y::T, z::T, octaves::Int, persistence::T) where {T<:AbstractFloat}
     total = 0.0
     frequency = 1.0
     amplitude = 1.0
