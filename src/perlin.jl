@@ -19,26 +19,6 @@ const PERMS1 = [151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7
 
 const PERMS = [PERMS1; PERMS1]
 
-
-function fade{T<:AbstractFloat}(x::T)
-    return 6x^5 - 15x^4 + 10x^3
-end
-
-
-function smoothstep{T<:AbstractFloat}(a0::T, a1::T, x::T)
-    a0 != a1 || throw(ArgumentError("Arguments a0 and a1 cannot be equal"))
-    x = clamp((x - a0) / (a1 - a0), 0.0, 1.0)
-    return 3x^2 - 2x^3
-end
-
-
-function smootherstep{T<:AbstractFloat}(a0::T, a1::T, x::T)
-    a0 != a1 || throw(ArgumentError("Arguments a0 and a1 cannot be equal"))
-    x = clamp((x - a0) / (a1 - a0), 0.0, 1.0)
-    return fade(x)
-end
-
-
 # Might refactor this down to a simple lerp
 function interpolate{T<:AbstractFloat}(a0::T, a1::T, w::T, method::Symbol=:linear)
     0 ≤ w ≤ 1 || throw(ArgumentError("Expected 0 ≤ w ≤ 1, got $w"))
