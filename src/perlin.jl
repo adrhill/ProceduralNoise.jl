@@ -54,15 +54,15 @@ function perlin(x::T, y::T, z::T) where {T<:AbstractFloat}
     bab = PERMS[PERMS[PERMS[xi + 1] + yi] + zi + 1]
     bbb = PERMS[PERMS[PERMS[xi + 1] + yi + 1] + zi + 1]
 
-    x1 = interpolate(gradient(aaa, xf, yf, zf), gradient(baa, xf - 1, yf, zf), u)
-    x2 = interpolate(gradient(aba, xf, yf - 1, zf), gradient(bba, xf - 1, yf - 1, zf), u)
-    y1 = interpolate(x1, x2, v)
+    x1 = lerp(gradient(aaa, xf, yf, zf), gradient(baa, xf - 1, yf, zf), u)
+    x2 = lerp(gradient(aba, xf, yf - 1, zf), gradient(bba, xf - 1, yf - 1, zf), u)
+    y1 = lerp(x1, x2, v)
 
-    x1 = interpolate(gradient(aab, xf, yf, zf - 1), gradient(bab, xf - 1, yf, zf - 1), u)
-    x2 = interpolate(gradient(abb, xf, yf - 1, zf - 1), gradient(bbb, xf - 1, yf - 1, zf - 1), u)
-    y2 = interpolate(x1, x2, v)
+    x1 = lerp(gradient(aab, xf, yf, zf - 1), gradient(bab, xf - 1, yf, zf - 1), u)
+    x2 = lerp(gradient(abb, xf, yf - 1, zf - 1), gradient(bbb, xf - 1, yf - 1, zf - 1), u)
+    y2 = lerp(x1, x2, v)
 
-    return (interpolate(y1, y2, w) + 1) / 2
+    return (lerp(y1, y2, w) + 1) / 2
 end
 
 function octaveperlin(
