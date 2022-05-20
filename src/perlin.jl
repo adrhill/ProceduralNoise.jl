@@ -54,9 +54,9 @@ function perlin3d(x::T, y::T, z::T) where {T<:AbstractFloat}
     yi = trunc(Int, y) & 255 + 1
     zi = trunc(Int, z) & 255 + 1
 
-    xf = first(modf(x))
-    yf = first(modf(y))
-    zf = first(modf(z))
+    xf = rem(x, oneunit(x))
+    yf = rem(x, oneunit(y))
+    zf = rem(x, oneunit(z))
 
     u = fade(xf)
     v = fade(yf)
@@ -84,8 +84,8 @@ end
 
 function perlin(x::T...) where {T<:AbstractFloat}
     n = length(x)
-    xi = trunc.(Int, x) .& 255 .+ 1
-    xf = first.(modf.(x))
+    xi = @. trunc(Int, x) & 255 + 1
+    xf = @. rem(x, oneunit(x))
     u = fade.(xf)
 
     hypv = Iterators.product(ntuple(Returns(1:2), n)...)
@@ -100,10 +100,7 @@ function perlin(x::T...) where {T<:AbstractFloat}
 
     for dm in (n - 1):-1:0
         inds_after = ntuple(Returns(:), dm)
-        grads =
-            lerp.(
-                grads[1, inds_after...], grads[2, inds_after...], u[n - dm]
-            )
+        grads = lerp.(grads[1, inds_after...], grads[2, inds_after...], u[n - dm])
     end
 
     return (grads + 1) / 2
