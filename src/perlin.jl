@@ -88,7 +88,7 @@ function perlin(x::T...) where {T<:AbstractFloat}
     xf = first.(modf.(x))
     u = fade.(xf)
 
-    hypv = Iterators.product(repeat([[1, 2]], n)...)
+    hypv = Iterators.product(ntuple(Returns(1:2), n)...)
     inds = zeros(Int, size(hypv))
     grads = Array{T,n}(undef, size(hypv))
     for v in hypv
@@ -99,9 +99,10 @@ function perlin(x::T...) where {T<:AbstractFloat}
     end
 
     for dm in (n - 1):-1:0
+        inds_after = ntuple(Returns(:), dm)
         grads =
-            interpolate.(
-                grads[1, ntuple(i -> :, dm)...], grads[2, ntuple(i -> :, dm)...], u[n - dm]
+            lerp.(
+                grads[1, inds_after...], grads[2, inds_after...], u[n - dm]
             )
     end
 
@@ -118,8 +119,8 @@ Fills a hypercube (corners at `(0...)` and `(x...)`) with perlin noise.
 function perlin_fill(res::Int, x::T...) where {T<:AbstractFloat}
     n = length(x)
 
-    idxs = Iterators.product(ntuple(i -> 1:res, n)...)
-    hypv = Iterators.product(repeat([[1, 2]], n)...)
+    idxs = Iterators.product(ntuple(Returns(1:res), n)...)
+    hypv = Iterators.product(ntuple(Returns(1:2), n)...)
     inds = Array{Int,n}(undef, size(hypv))
     grads = Array{T,n + n}(undef, (size(idxs)..., size(hypv)...))
     us = Array{T,n + 1}(undef, (size(idxs)..., n))
@@ -142,13 +143,13 @@ function perlin_fill(res::Int, x::T...) where {T<:AbstractFloat}
     # map(idx -> local_perlin(idx...), idxs)
 
     for dm in (n - 1):-1:0
-        inds_left = ntuple(Returns(:), n)
-        inds_right = ntuple(Returns(:), dm)
+        inds_before = ntuple(Returns(:), n)
+        inds_after = ntuple(Returns(:), dm)
         grads =
-            interpolate.(
-                grads[inds_left..., 1, inds_right...],
-                grads[inds_left..., 2, inds_right...],
-                us[inds_left..., n - dm],
+            lerp.(
+                grads[inds_before..., 1, inds_after...],
+                grads[inds_before..., 2, inds_after...],
+                us[inds_before..., n - dm],
             )
     end
     return (grads .+ 1) ./ 2
@@ -171,10 +172,10 @@ function octaveperlin3d(
 end
 
 function octaveperlin(octaves::Int, persistence::T, x::T...) where {T<:AbstractFloat}
-    total = 0.0
-    frequency = 1.0
-    amplitude = 1.0
-    maxval = 0.0
+    total = zero(T)
+    frequency = oneunit(T)
+    amplitude = oneunit(T)
+    maxval = zero(T)
     for _ in 1:octaves
         total += perlin((x .* frequency)...) * amplitude
         maxval += amplitude
