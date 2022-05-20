@@ -66,12 +66,12 @@ function perlin(x::T, y::T, z::T) where {T<:AbstractFloat}
 end
 
 function octaveperlin(
-    x::T, y::T, z::T, octaves::Int, persistence::T
+    octaves::Int, persistence::T, x::T, y::T, z::T
 ) where {T<:AbstractFloat}
-    total = 0.0
-    frequency = 1.0
-    amplitude = 1.0
-    maxval = 0.0
+    total = zero(T)
+    frequency = oneunit(T)
+    amplitude = oneunit(T)
+    maxval = zero(T)
     for _ in 1:octaves
         total += perlin(x * frequency, y * frequency, z * frequency) * amplitude
         maxval += amplitude
