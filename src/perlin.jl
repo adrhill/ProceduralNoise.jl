@@ -125,7 +125,7 @@ function perlin_fill(res::Int, x::T...) where {T<:AbstractFloat}
     grads = Array{T,n + n}(undef, (size(idxs)..., size(hypv)...))
     us = Array{T,n + 1}(undef, (size(idxs)..., n))
 
-    function local_perlin(idx::Int...)
+    function local_perlin!(idx::Int...)
         xl = idx ./ res .* x
         xi = trunc.(Int, xl) .& 255 .+ 1
         xf = first.(modf.(xl))
@@ -140,7 +140,7 @@ function perlin_fill(res::Int, x::T...) where {T<:AbstractFloat}
         end
     end
 
-    # map(idx -> local_perlin(idx...), idxs)
+    map(idx -> local_perlin!(idx...), idxs)
 
     for dm in (n - 1):-1:0
         inds_before = ntuple(Returns(:), n)
