@@ -19,7 +19,7 @@ const PERMS1 = [151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7
 
 const PERMS = [PERMS1; PERMS1]
 
-function gradient3d(hash::Int64, x::T, y::T, z::T) where T <: AbstractFloat
+function gradient3d(hash::Int, x::T, y::T, z::T) where {T<:AbstractFloat}
     h = hash & 15
     u = h < 8 ? x : y
     v = if h < 4
@@ -32,24 +32,24 @@ function gradient3d(hash::Int64, x::T, y::T, z::T) where T <: AbstractFloat
     return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v)
 end
 
-function gradient(hash::Int64, x::T...) where T <: AbstractFloat
+function gradient(hash::Int, x::T...) where {T<:AbstractFloat}
     n = length(x)
     nc2 = n * (2 * n + 1) - 2 * n
     xf = tuple(x..., .-x...)
-    table = Array{T,2}(undef, (nc2,2))
+    table = Array{T,2}(undef, (nc2, 2))
     c = 1
-    for i in 1:2*n
-        for j in i+1:2*n
-	    table[c, :] .= [xf[i], xf[j]]
-	    c += 1
-	end
+    for i in 1:(2 * n)
+        for j in (i + 1):(2 * n)
+            table[c, :] .= [xf[i], xf[j]]
+            c += 1
+        end
     end
 
     h = hash % (nc2) + 1
     return table[h, 1] + table[h, 2]
 end
 
-function perlin3d(x::T, y::T, z::T) where T <: AbstractFloat
+function perlin3d(x::T, y::T, z::T) where {T<:AbstractFloat}
     xi = trunc(Int, x) & 255 + 1
     yi = trunc(Int, y) & 255 + 1
     zi = trunc(Int, z) & 255 + 1
@@ -71,89 +71,97 @@ function perlin3d(x::T, y::T, z::T) where T <: AbstractFloat
     bab = PERMS[PERMS[PERMS[xi + 1] + yi] + zi + 1]
     bbb = PERMS[PERMS[PERMS[xi + 1] + yi + 1] + zi + 1]
 
-    x1 = lerp(gradient(aaa, xf, yf, zf), gradient(baa, xf - 1, yf, zf), u)
-    x2 = lerp(gradient(aba, xf, yf - 1, zf), gradient(bba, xf - 1, yf - 1, zf), u)
+    x1 = lerp(gradient3d(aaa, xf, yf, zf), gradient3d(baa, xf - 1, yf, zf), u)
+    x2 = lerp(gradient3d(aba, xf, yf - 1, zf), gradient3d(bba, xf - 1, yf - 1, zf), u)
     y1 = lerp(x1, x2, v)
 
-    x1 = lerp(gradient(aab, xf, yf, zf - 1), gradient(bab, xf - 1, yf, zf - 1), u)
-    x2 = lerp(gradient(abb, xf, yf - 1, zf - 1), gradient(bbb, xf - 1, yf - 1, zf - 1), u)
+    x1 = lerp(gradient3d(aab, xf, yf, zf - 1), gradient3d(bab, xf - 1, yf, zf - 1), u)
+    x2 = lerp(gradient3d(abb, xf, yf - 1, zf - 1), gradient3d(bbb, xf - 1, yf - 1, zf - 1), u)
     y2 = lerp(x1, x2, v)
 
     return (lerp(y1, y2, w) + 1) / 2
 end
 
-function perlin(x::T...) where T <: AbstractFloat
+function perlin(x::T...) where {T<:AbstractFloat}
     n = length(x)
-
     xi = trunc.(Int, x) .& 255 .+ 1
     xf = first.(modf.(x))
     u = fade.(xf)
 
-    hypv = Iterators.product(repeat([[1,2]], n)...)
-    inds = zeros(Int64, size(hypv))
-    grads = Array{T, n}(undef, size(hypv))
+    hypv = Iterators.product(repeat([[1, 2]], n)...)
+    inds = zeros(Int, size(hypv))
+    grads = Array{T,n}(undef, size(hypv))
     for v in hypv
         for (c, i) in zip(v, xi)
-	    inds[v...] = PERMS[inds[v...] + i + c - 1]
-	end
+            inds[v...] = PERMS[inds[v...] + i + c - 1]
+        end
         grads[v...] = gradient(inds[v...], (xf .- v .+ 1)...)
     end
 
-    for dm in n-1:-1:0
-        grads = interpolate.(grads[1, ntuple(i -> :, dm)...], grads[2, ntuple(i -> :, dm)...], u[n-dm])
+    for dm in (n - 1):-1:0
+        grads =
+            interpolate.(
+                grads[1, ntuple(i -> :, dm)...], grads[2, ntuple(i -> :, dm)...], u[n - dm]
+            )
     end
 
     return (grads + 1) / 2
 end
 
-
 """
     perlin_fill(res, x)
 
-    Fills a hypercube (corners at (0...) and (x...)) with perlin noise.
-    res is a resolution (number of points per dimension)
+Fills a hypercube (corners at `(0...)` and `(x...)`) with perlin noise.
+`res` is a resolution (number of points per dimension).
 """
 
-function perlin_fill(res::Int, x::T...) where T <: AbstractFloat
+function perlin_fill(res::Int, x::T...) where {T<:AbstractFloat}
     n = length(x)
-    
-    xs = Iterators.product(map(x -> range(0., stop=x, length=res), x))
-    idxs = Iterators.product(ntuple(i->1:res, n)...)
-    hypv = Iterators.product(repeat([[1,2]], n)...)
-    inds = Array{Int64, n}(undef, size(hypv))
-    grads = Array{T, n+n}(undef, (size(idxs)..., size(hypv)...))
-    us = Array{T, n+1}(undef, (size(idxs)..., n))
 
-    function local_perlin(idx::Int64...)
+    idxs = Iterators.product(ntuple(i -> 1:res, n)...)
+    hypv = Iterators.product(repeat([[1, 2]], n)...)
+    inds = Array{Int,n}(undef, size(hypv))
+    grads = Array{T,n + n}(undef, (size(idxs)..., size(hypv)...))
+    us = Array{T,n + 1}(undef, (size(idxs)..., n))
+
+    function local_perlin(idx::Int...)
         xl = idx ./ res .* x
         xi = trunc.(Int, xl) .& 255 .+ 1
         xf = first.(modf.(xl))
         us[idx..., :] .= fade.(xf)
 
-        inds .= zeros(Int64, size(hypv))
+        inds .= zeros(Int, size(hypv))
         for v in hypv
             for (c, i) in zip(v, xi)
                 inds[v...] = PERMS[inds[v...] + i + c - 1]
             end
             grads[idx..., v...] = gradient(inds[v...], (xf .- v .+ 1)...)
         end
-
     end
-   
-    map(idx -> local_perlin(idx...), idxs)
 
-    for dm in n-1:-1:0
-        grads = interpolate.(grads[ntuple(i -> :, n)... ,1 , ntuple(i -> :, dm)...], grads[ntuple(i -> :, n)..., 2, ntuple(i -> :, dm)...], us[ntuple(i -> :, n)...,n-dm])
+    # map(idx -> local_perlin(idx...), idxs)
+
+    for dm in (n - 1):-1:0
+        inds_left = ntuple(Returns(:), n)
+        inds_right = ntuple(Returns(:), dm)
+        grads =
+            interpolate.(
+                grads[inds_left..., 1, inds_right...],
+                grads[inds_left..., 2, inds_right...],
+                us[inds_left..., n - dm],
+            )
     end
     return (grads .+ 1) ./ 2
 end
 
-function octaveperlin3d(octaves::Int, persistence::T, x::T, y::T, z::T) where T <: AbstractFloat
+function octaveperlin3d(
+    octaves::Int, persistence::T, x::T, y::T, z::T
+) where {T<:AbstractFloat}
     total = 0.0
     frequency = 1.0
     amplitude = 1.0
     maxval = 0.0
-    for i = 1:octaves
+    for _ in 1:octaves
         total += perlin3d(x * frequency, y * frequency, z * frequency) * amplitude
         maxval += amplitude
         amplitude *= persistence
@@ -162,12 +170,12 @@ function octaveperlin3d(octaves::Int, persistence::T, x::T, y::T, z::T) where T 
     return total / maxval
 end
 
-function octaveperlin(octaves::Int, persistence::T, x::T...,) where T <: AbstractFloat
+function octaveperlin(octaves::Int, persistence::T, x::T...) where {T<:AbstractFloat}
     total = 0.0
     frequency = 1.0
     amplitude = 1.0
     maxval = 0.0
-    for i = 1:octaves
+    for _ in 1:octaves
         total += perlin((x .* frequency)...) * amplitude
         maxval += amplitude
         amplitude *= persistence
